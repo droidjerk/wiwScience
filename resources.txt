@@ -1,0 +1,12 @@
+Reference material for the project
+
+Boostrap:
+https://github.com/mbr/flask-bootstrap/tree/master/sample_app
+https://www.w3schools.com/bootstrap/default.asp
+https://pythonhosted.org/Flask-Bootstrap/
+
+Flask:
+https://github.com/miguelgrinberg/microblog
+https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world
+https://flask-wtf.readthedocs.io/en/stable/
+http://jinja.pocoo.org/docs/2.9/
