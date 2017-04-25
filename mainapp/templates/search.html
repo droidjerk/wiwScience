@@ -1,10 +1,26 @@
 {%- extends "base.html" %}
 
+
 {% block content %}
-  <div class="container">
-      <div class=jumbotron>
-          <p>Tutaj powinny być pola wyszukiwań</p>
-      </div>
-   </div>
+<div class="container">
+    <div class=jumbotron>
+        <form method="POST" action="/">
+            <table class='table borderless'>
+                {% for field in form if field.widget.input_type != 'hidden' %}
+                <tr>
+                    {% if field.type == "BooleanField" %}
+                    <td></td>
+                    <td>{{ field }} {{ field.label }}</td>
+                    {% else %}
+                    <td>{{ field.label }}</td>
+                    <td>{{ field }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                <table>
+                    <input type="submit" value="Szukaj">    
+        </form>
+    </div>
+</div>
 {%- endblock %}
 
