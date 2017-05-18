@@ -3,17 +3,17 @@
 {% block content %}
 <div class="container">
     <div class=jumbotron>
-
         <table class='table'>
         {% for index in range((pagination.page - 1) * pagination.per_page, 
                               pagination.page * pagination.per_page) %}
             {% if index < content|length %}
-            <tr>
-                <td><img src={{ content[index][0] }} width="100"></td>
-                {% for cell_index in range(1, content|length) %}
-                    <td>{{ content[index][cell_index] }}</td>
-                {% endfor %}
-            </tr>
+                <tr> 
+                    <td><img src={{ content[index][0] }} width="100"></td>
+                    {% for cell_index in range(1, content[index]|length - 1) %}
+                        <td>{{ content[index][cell_index] }}</td>
+                    {% endfor %}
+                    <td><a href="{{ url_for('profile', id=content[index][-1]) }}">Profil</a>
+                </tr>
             {% endif %}
         {% endfor %}
         </table>
