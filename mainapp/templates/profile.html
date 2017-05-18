@@ -7,21 +7,21 @@
             <div class="col-md-8">  
                 <table class='table table-responsive'>
                     {% for nazwa, wartosc in profile.items() %}
-                    {% if nazwa != 'image' %}
-                    <tr>
-                        <td>{{nazwa}}</td>
-                        <td>{{wartosc}}</td>
-                    </tr>
-                    {% endif %}
+                        {% if nazwa != 'image' %}
+                        <tr>
+                            <td>{{nazwa}}</td>
+                            <td>{{wartosc}}</td>
+                        </tr>
+                        {% endif %}
                     {% endfor %}
                 </table>
             </div>
             {% if 'image' in profile %}
-            <div class="col-md-4">
-                <img src={{profile['image']}} class="img-responsive">
-            </div>
+               <div class="col-md-4">
+                    <img src={{profile['image']}} class="img-responsive">
+               </div>
         </div>
-        {% endif %}
+            {% endif %}
     </div>
     <div class="row">
         <div class="container">

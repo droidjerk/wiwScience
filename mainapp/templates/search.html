@@ -9,25 +9,25 @@
 
                 <table class="table borderless">
                     {% for field in form if field.widget.input_type != 'hidden' %}
-                    {% if field.id != 'do' %}
-                    <tr>
+                       {% if field.id != 'do' %}
+                            <tr>
                         {% endif %}
                         <!-- Sekcja odpowiedzialna za pola daty  --!>
                         {% if field.id == 'od' %}
-                        <td>{{ field.label}}</td>
-                        <td>From: {{ field }} 
-                            {% elif field.id == 'do' %}
+                            <td>{{ field.label}}</td>
+                            <td>From: {{ field }} 
+                        {% elif field.id == 'do' %}
                             To: {{ field }}</td>
                         <!-- Sekcja odpowiedzialna za resztę pól --!>
                         {% else %}
-                        <td>{{ field.label }}</td>
-                        <td>{{ field }}</td>
+                            <td>{{ field.label }}</td>
+                            <td>{{ field }}</td>
                         {% endif %}
                         {% if field.id != 'od' %}
-                    </tr>
-                    {% endif %}
+                            </tr>
+                        {% endif %}
                     {% endfor %}
-                    <table>
+                <table>
             </div>
             <input type="submit" value="Szukaj">    
         </form>

@@ -24,7 +24,10 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
 class Pagination(object):
-
+    """
+        A class for handling pagination in the results template.
+        Code borrowed from http://flask.pocoo.org/snippets/44/
+    """
     def __init__(self, page, per_page, total_count):
         self.page = page
         self.per_page = per_page
@@ -59,14 +62,15 @@ class Pagination(object):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/search', methods=['GET', 'POST'])
 def search_form():
-    # TODO
-    # Search forms HAVE to fill empty fields as Nones
     form = SearchForm()
+
+    # Filling choice fields in SearchForm
     years = [(str(x), str(x)) for x in
              range(1970, datetime.datetime.now().year + 1)] + [("", "")]
     for datefield in [form.do, form.od]:
         datefield.choices = years
         datefield.data = years[-1][0]
+
     if flask.request.method == 'POST':
         find = finder.DBLPAccess()
         arguments = {
@@ -79,8 +83,13 @@ def search_form():
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
         results = find.find(arguments)
+        # key identifies a search query; it is held in a cookie and used
+        # in show_results to present entries for the given query
         key = str(hash(frozenset(arguments.items())))
         session['latest-search'] = key
+        # Each found author profile is held in cache for an hour;
+        # a uid identifies the author, and a list of author uids is bound to
+        # the query key
         query_pointers = []
         for author in results:
             cache.add(author['uid'], author, timeout=60 * 60)
@@ -93,7 +102,9 @@ def search_form():
 @app.route('/results/', defaults={'page': 1})
 @app.route('/results/page/<int:page>')
 def show_results(page):
-    # Placeholder content
+    # If latest-search is not present in the cookie, a search query has to be
+    # ran first. The search also has to be ran again in case the cache has
+    # deleted the key-pointers pair due to a timeout.
     if ('latest-search' not in session or
             cache.get(session['latest-search']) is None):
         flask.flash("Your search query has expired!")
@@ -102,6 +113,11 @@ def show_results(page):
     entries = [cache.get(x) for x in cache.get(key)]
     content = []
     for author in entries:
+        # TODO
+        # In case an author times out in the cache while being
+        # retrived an error should show. Currently it's failing silently.
+        if author is None:
+            continue
         name, surname = author['name'].split(" ")[0], author['name'].split(" ")[1]
         content.append([flask.url_for('static', filename='default.png'),
                         name, surname,
@@ -109,6 +125,7 @@ def show_results(page):
                         author['uid']])
     if not content and page != 1:
         abort(404)
+    # Pagination is 3 for testing.
     pagination = Pagination(page, 3, len(content))
     return flask.render_template('results.html',
                                  pagination=pagination,
