@@ -10,8 +10,9 @@ class SearchForm(flask_wtf.FlaskForm):
     publikacja = wtforms.StringField('Publication')
     afilacja = wtforms.StringField('Institution/University')
     #od = wtforms.fields.html5.DateField('Publication dates (from)', format="%Y")
-    od = wtforms.fields.SelectField('Publication year (From)', coerce=int)
-    do = wtforms.fields.SelectField('Publication year (To)', coerce=int)
-    datesearch = wtforms.fields.BooleanField(label="Deactivate publication date filtering", default=True)
+    od = wtforms.fields.SelectField('Publication year (From to)')
+    do = wtforms.fields.SelectField('to')
     # TODO
     # Multichoice for resources
+    # TODO
+    # Empty date fields

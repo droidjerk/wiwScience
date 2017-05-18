@@ -5,20 +5,31 @@
 <div class="container">
     <div class=jumbotron>
         <form method="POST" action="/">
-            <table class='table borderless'>
-                {% for field in form if field.widget.input_type != 'hidden' %}
-                <tr>
-                    {% if field.type == "BooleanField" %}
-                    <td></td>
-                    <td>{{ field }} {{ field.label }}</td>
-                    {% else %}
-                    <td>{{ field.label }}</td>
-                    <td>{{ field }}</td>
+            <div class="table-responsive">
+
+                <table class="table borderless">
+                    {% for field in form if field.widget.input_type != 'hidden' %}
+                    {% if field.id != 'do' %}
+                    <tr>
+                        {% endif %}
+                        <!-- Sekcja odpowiedzialna za pola daty  --!>
+                        {% if field.id == 'od' %}
+                        <td>{{ field.label}}</td>
+                        <td>From: {{ field }} 
+                            {% elif field.id == 'do' %}
+                            To: {{ field }}</td>
+                        <!-- Sekcja odpowiedzialna za resztę pól --!>
+                        {% else %}
+                        <td>{{ field.label }}</td>
+                        <td>{{ field }}</td>
+                        {% endif %}
+                        {% if field.id != 'od' %}
+                    </tr>
                     {% endif %}
-                </tr>
-                {% endfor %}
-                <table>
-                    <input type="submit" value="Szukaj">    
+                    {% endfor %}
+                    <table>
+            </div>
+            <input type="submit" value="Szukaj">    
         </form>
     </div>
 </div>
