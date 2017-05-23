@@ -6,7 +6,6 @@ bibtexparser==0.6.2
 cffi==1.10.0
 click==6.7
 cryptography==1.8.1
-dblp-python==0.1
 dominate==2.3.1
 Flask==0.12.1
 Flask-Admin==1.5.0
@@ -21,7 +20,6 @@ Jinja2==2.9.6
 lucene-querybuilder==0.2
 lxml==3.7.3
 MarkupSafe==1.0
-orcid-python==0.1
 packaging==16.8
 pycparser==2.17
 pyOpenSSL==17.0.0
