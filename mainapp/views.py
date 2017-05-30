@@ -1,17 +1,30 @@
+import os
+import string
 import datetime
 
 from math import ceil
 
 import flask
+import redis
 
 from flask import abort, session
+from celery import Celery
 from werkzeug.contrib.cache import MemcachedCache
-import string
+
 from .forms import SearchForm
 from .data_retrieval import finder
 from mainapp import app
 
+r = redis.from_url(os.environ.get("REDIS_URL"))
+app.config['CELERY_BROKER_URL'] = redis_url
+app.config['CELERY_RESULT_BACKEND'] = redis_url
+
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
+
 cache = MemcachedCache(['127.0.0.1:11211'])
+# cache = MemcachedCache(['memcached-12214.c3.eu-west-1-1.ec2.cloud.redislabs.com:12214'])
 
 
 def url_for_other_page(page):
@@ -98,6 +111,10 @@ def search_form():
         return flask.redirect(flask.url_for('show_results'))
     return flask.render_template('search.html', form=form)
 
+@celery.task(bind=True)
+def fetch_records(self):
+
+
 
 @app.route('/results/', defaults={'page': 1})
 @app.route('/results/page/<int:page>')
@@ -118,15 +135,17 @@ def show_results(page):
         # retrived an error should show. Currently it's failing silently.
         if author is None:
             continue
-        name, surname = author['name'].split(" ")[0], author['name'].split(" ")[1]
+        name = author['name'].split(" ")[0],
+        surname = author['name'].split(" ")[1]
         content.append([flask.url_for('static', filename='default.png'),
                         name, surname,
                         author['affiliation'],
                         author['uid']])
     if not content and page != 1:
         abort(404)
-    # Pagination is 3 for testing.
-    pagination = Pagination(page, 3, len(content))
+    # TODO
+    # Customizable number of entires per page
+    pagination = Pagination(page, 10, len(content))
     return flask.render_template('results.html',
                                  pagination=pagination,
                                  content=content)
