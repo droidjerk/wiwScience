@@ -8,9 +8,9 @@ import flask
 from flask import abort, session
 
 from .forms import SearchForm
-from mainapp import app, celery, cache
+from mainapp import app
+from .external import cache, celery
 from . import tasks
-# Setting up Redis, Celery and Memcached
 
 
 def url_for_other_page(page):
@@ -83,6 +83,8 @@ def search_form():
         # logger.debug('Search form: ' + str(arguments))
         task = tasks.aggregate.apply_async(args=[arguments])
         # logger.debug('Task id: ' + str(task.id))
+        key = str(hash(frozenset(arguments.items())))
+        session['latest-search'] = key
         session['running-task'] = task.id
         return flask.redirect('loading.html', task=task.id)
     return flask.render_template('search.html', form=form)

@@ -1,7 +1,6 @@
 import celery
 from . import finder
-from flask import session
-from mainapp import cache
+from .external import cache
 from concurrent.futures.thread import ThreadPoolExecutor
 from fuzzywuzzy import fuzz
 from statistics import mean
@@ -9,7 +8,7 @@ from statistics import mean
 CUTOFF = 10
 
 @celery.task(bind=True)
-def aggregate(self, arguments):
+def aggregate(self, arguments, key):
     executor = ThreadPoolExecutor(max_workers=5)
     engines = [finder.DBLPAccess(), finder.ORCiD()]
     futures = [executor.submit(engine.find, arguments) for engine in engines]
@@ -21,8 +20,6 @@ def aggregate(self, arguments):
                       meta={'status': "Aggregating the data"})
     # key identifies a search query; it is held in a cookie and used
     # in show_results to present entries for the given query
-    key = str(hash(frozenset(arguments.items())))
-    session['latest-search'] = key
     results = _consolidate(results)
     # Each found author profile is held in cache for an hour;
     # a uid identifies the author, and a list of author uids is bound to
