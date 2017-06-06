@@ -9,9 +9,8 @@ from flask import abort, session
 
 from .forms import SearchForm
 from mainapp import app, celery, cache
-import tasks
-from logger import logger
-
+from . import tasks
+from .logger import logger
 # Setting up Redis, Celery and Memcached
 
 
