@@ -80,9 +80,9 @@ def search_form():
             'affiliation': flask.request.form['afilacja'],
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
-        logger.debug('Search form: ' + str(arguments))
+        # logger.debug('Search form: ' + str(arguments))
         task = tasks.aggregate.apply_async(arguments)
-        logger.debug('Task id: ' + str(task.id))
+        # logger.debug('Task id: ' + str(task.id))
         session['running-task'] = task.id
         return flask.redirect('loading.html', task=task.id)
     return flask.render_template('search.html', form=form)
@@ -90,7 +90,7 @@ def search_form():
 
 @app.route('/status/<task_id>')
 def taskstatus(task_id):
-    logger.debug('Acessing status for task:' + task_id)
+        # logger.debug('Acessing status for task:' + task_id)
     task = tasks.aggregate.task.AsyncResult(task_id)
     if task.state == 'PENDING':
         response = {
@@ -112,7 +112,7 @@ def taskstatus(task_id):
             'current': 0,
             'status': str(task.info),  # this is the exception raised
         }
-    logger.debug('Task response for {} : {}'.format(str(task.id),
+    # logger.debug('Task response for {} : {}'.format(str(task.id),
                                                     str(response)))
     return flask.jsonify(response)
 
@@ -203,7 +203,7 @@ def profile(id):
     if content is None:
         flask.flash("Profile is not cached on server")
         return flask.redirect('/')
-    logger.debug('Acessing author: {} with result: {}'.format(str(id),
+    # logger.debug('Acessing author: {} with result: {}'.format(str(id),
                                                               content))
     profile = content
     publications = profile['publications']
