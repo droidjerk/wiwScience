@@ -11,6 +11,7 @@ cffi==1.10.0
 chardet==3.0.3
 click==6.7
 cryptography==1.9
+-e git://github.com/kosiba-mat/dblp-python.git
 dominate==2.3.1
 Flask==0.12.2
 Flask-Admin==1.5.0
@@ -26,6 +27,7 @@ kombu==4.0.2
 lucene-querybuilder==0.2
 lxml==3.7.3
 MarkupSafe==1.0
+-e git://github.com/kosiba-mat/orcid-python.git
 packaging==16.8
 pycparser==2.17
 pyOpenSSL==17.0.0

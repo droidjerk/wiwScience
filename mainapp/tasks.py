@@ -23,6 +23,7 @@ def aggregate(self, arguments):
     # in show_results to present entries for the given query
     key = str(hash(frozenset(arguments.items())))
     session['latest-search'] = key
+    results = _consolidate(results)
     # Each found author profile is held in cache for an hour;
     # a uid identifies the author, and a list of author uids is bound to
     # the query key
@@ -31,52 +32,61 @@ def aggregate(self, arguments):
         cache.add(author['uid'], author, timeout=60 * 60)
         query_pointers.append(author['uid'])
     cache.add(key, query_pointers, timeout=60 * 60)
+    return {'status': "Success!"}
 
 
-def _consolidate(entires):
-    complete = entires.pop(0)
+def _consolidate(entries):
+    complete = entries.pop(0)
     while entries:
-        entry = entries.pop()
-        index = _find_match(entry, complete)
-        if index < 0:
-            continue
-        join(complete[i], entry)
+        entry = entries.pop(0)
+        while entry:
+            person = entry.pop()
+            join(complete, person)
+    return complete
 
 
-def join(main, new):
-    if fuzz.partial_ratio(main['affiliation'], new['affiliation']) < 90:
-        main['affiliation'].append(new['affiliation'])
-    new_pubs = []
-    for npub in new['publications']:
-        for mpub in main['publications']:
-            if (fuzz.partial_ratio(npub['title'], mpub['title']) < 90 and
-                    str(mpub['year']) != str(npub['year'])):
-                new_pubs.append(npub)
-
-            if mpub['link'] == npub['link']:
-                continue
-            if isinstance(mpub['link'], str):
-                mpub['link'] = [mpub['link']]
-            if isinstance(npub['link'], str):
-                mpub['link'].append(npub['link'])
-            else:
-                mpub['link'].extend(mpub['link'])
-
-
-
+def join(full_list, new_entry):
+    attributes = ['name', 'affiliation']
+    scores = []
+    for entry in full_list:
+        scores.append(mean([fuzz.partial_ratio(entry[x], new_entry[x])
+                            for x in attributes]))
+    print(max(scores))
+    if max(scores) < 60:
+        full_list.append(new_entry)
+        return full_list
+    main = full_list[scores.index(max(scores))]
+    attributes.extend(['biography', 'interests', 'homepages'])
+    for attribute in attributes:
+        if attribute not in main:
+            main[attribute] = ['']
+        if attribute not in new_entry:
+            new_entry[attribute] = ['']
+        main[attribute] = list_join(main[attribute], new_entry[attribute])
+    main['publications'] = list_join(main['publications'], new_entry['publications'], key=lambda x:x['title'])
 
 
+def list_similarity(list1, list2, key=lambda x: x):
+    all_scores = []
+    for element in list1:
+        all_scores.append(max([fuzz.partial_ratio(key(element), key(element2))
+                               for element2 in list2]))
+    return mean(all_scores)
 
-def _find_match(person, entries):
-    def compare(person1, person2):
-        attribs = ['name', 'affilation']
-        return mean([fuzz.partial_ratio(person1[x], person2[x]) for x in attribs])
-    scores = [compare(person, candidate) for candidate in entries]
-    if max(scores) < CUTOFF:
-        return -1
-    return scores.index(max(scores))
-
-
-
+def list_join(list1, list2, key=lambda x: x):
+    if list1 == [''] or list2 == ['']:
+        list1.extend(list2)
+        return list1
+    in_list = [0 for x in list2]
+    for element in list1:
+        scores = [fuzz.partial_ratio(key(element), key(element2))
+                  for element2 in list2]
+        for index, score in enumerate(scores):
+            if score > 90:
+                in_list[index] = 1
+    for index, mask in enumerate(in_list):
+        if mask == 0:
+            list1.append(list2[index])
+    return list1
 
 

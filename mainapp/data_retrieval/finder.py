@@ -2,7 +2,7 @@ import datetime
 
 from statistics import mean
 from concurrent.futures.thread import ThreadPoolExecutor
-
+import collections
 from fuzzywuzzy import fuzz, process
 
 import dblp
@@ -16,6 +16,23 @@ from orcid import Q
 #   interests
 #   publication keyword
 #   years range
+
+
+def flatten(x):
+    if isinstance(x, (list, set)):
+        return [a for i in x for a in flatten(i)]
+    else:
+        return [x]
+
+
+def flatten_dict(entry):
+    for key in entry:
+        entry[key] = flatten(entry[key])
+    return entry
+
+
+def name_fix(name):
+    return "".join([x for x in name if x not in [str(i) for i in range(0, 10)]]).strip()
 
 
 class SchoarlyAccess:
@@ -162,10 +179,9 @@ class DBLPAccess:
                     'other': pub['other'],
                     'journal': pub['journal']
                 }
+                new_pub = flatten_dict(new_pub)
+                new_pub['author'] = [name_fix(name) for name in new_pub['author']]
                 new_pubs.append(new_pub)
-            else:
-                print('bleh', pub)
-        print(new_pubs)
         return new_pubs
 
     def find(self, criteria):
@@ -184,7 +200,6 @@ class DBLPAccess:
             authors = self._msearch_name(name, criteria['affiliation'])
             authors = self.refine_by_pubs(authors, criteria['keywords'],
                                           range(od, do + 1), criteria['venue'])
-        print(authors)
         if not authors:
             authors = self._msearch_pubs(criteria['keywords'],
                                          range(od, do + 1),
@@ -197,6 +212,8 @@ class DBLPAccess:
             if not isinstance(author['name'], str):
                 author['name'] = author['name'][0]
             author['uid'] = str(hash(author['name']))
+            flatten_dict(author)
+            author['name'] = [name_fix(name) for name in author['name']]
             result.append(author)
         return result
 
@@ -216,19 +233,19 @@ orcid_map = {
 }
 class ORCiD:
 
-    def process_author(author):
+    def process_author(self, author):
         print(author)
-        author = {
+        new_entry = {
             'name': author.given_name + " " + author.family_name,
-            # 'affiliation': '',
+            'affiliation': '',
             'biography': author.biography['value'],
             'interests':  author.keywords,
             'homepages': author.researcher_urls,
-            'publications': ORCiD.process_publications(author.publications)
+            'publications': self.process_publications(author.publications)
         }
-        return author
+        return flatten_dict(new_entry)
 
-    def process_publications(pubs):
+    def process_publications(self, pubs):
         publications = []
         for pub in pubs:
             new_pub = {
@@ -241,10 +258,10 @@ class ORCiD:
             new_pub['author'] = authors
             if 'journal-title' in pub._original_dict:
                 new_pub['journal'] = new_pub._original_dict['journal-title']
-            publications.append(new_pub)
+            publications.append(flatten_dict(new_pub))
         return publications
 
-    def find(criteria):
+    def find(self, criteria):
         queries = []
         for keyword in criteria:
             if not criteria[keyword] or keyword not in orcid_map:
@@ -254,7 +271,7 @@ class ORCiD:
         query = queries.pop()
         while queries:
             query = query & queries.pop()
-        authors = [ORCiD.process_author(x) for x in list(orcid.search(query))]
+        authors = [self.process_author(x) for x in list(orcid.search(query))]
         return authors
 
 
