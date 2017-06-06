@@ -81,7 +81,7 @@ def search_form():
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
         # logger.debug('Search form: ' + str(arguments))
-        task = tasks.aggregate.apply_async(arguments)
+        task = tasks.aggregate.apply_async(args=arguments)
         # logger.debug('Task id: ' + str(task.id))
         session['running-task'] = task.id
         return flask.redirect('loading.html', task=task.id)
