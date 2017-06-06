@@ -11,7 +11,9 @@ from .forms import SearchForm
 from .data_retrieval import finder
 from mainapp import app
 
-cache = MemcachedCache(['127.0.0.1:11211'])
+from sqlitedict import SqliteDict
+
+cache = SqliteDict('cache')
 
 
 def url_for_other_page(page):
@@ -92,9 +94,9 @@ def search_form():
         # the query key
         query_pointers = []
         for author in results:
-            cache.add(author['uid'], author, timeout=60 * 60)
+            cache[author['uid']] = author
             query_pointers.append(author['uid'])
-        cache.add(key, query_pointers, timeout=60 * 60)
+        cache[key] = query_pointers
         return flask.redirect(flask.url_for('show_results'))
     return flask.render_template('search.html', form=form)
 
