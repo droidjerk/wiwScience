@@ -113,7 +113,7 @@ def taskstatus(task_id):
             'status': str(task.info),  # this is the exception raised
         }
     # logger.debug('Task response for {} : {}'.format(str(task.id),
-                                                    str(response)))
+                                                    # str(response)))
     return flask.jsonify(response)
 
 
@@ -204,7 +204,7 @@ def profile(id):
         flask.flash("Profile is not cached on server")
         return flask.redirect('/')
     # logger.debug('Acessing author: {} with result: {}'.format(str(id),
-                                                              content))
+                                                              # content))
     profile = content
     publications = profile['publications']
 
