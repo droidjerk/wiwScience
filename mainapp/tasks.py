@@ -1,5 +1,5 @@
 import celery
-from .data_retrieval import finder
+from . import finder
 from flask import session
 from mainapp import cache
 from concurrent.futures.thread import ThreadPoolExecutor
