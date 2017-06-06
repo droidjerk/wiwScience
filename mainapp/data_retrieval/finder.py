@@ -134,12 +134,45 @@ class DBLPAccess:
                     break
         return new_authors
 
+    def refine_publication(self, author):
+        pubs = author['publications']
+        new_pubs = []
+        for pub in pubs:
+            pub_type = list(pub.keys())[0]
+            if pub_type in ['inproceedings', 'article', 'book']:
+                pub = pub[pub_type]
+                pub['other'] = ''
+                if pub_type == 'book':
+                    pub['author'] = pub['editor']
+                    pub['title'] = pub['booktitle']
+                    pub['other'] = "Publisher: " + pub['publisher'] + ", ISBN: " + pub['isbn']
+                if 'url' not in pub:
+                    pub['url'] = ''
+                if 'ee' not in pub:
+                    pub['ee'] = ''
+                if 'journal' not in pub:
+                    pub['journal'] = ''
+                if isinstance(pub['author'], str):
+                    pub['author'] = [pub['author']]
+                new_pub = {
+                    'title': pub['title'],
+                    'author': pub['author'],
+                    'link': pub['ee'],
+                    'year': pub['year'],
+                    'other': pub['other'],
+                    'journal': pub['journal']
+                }
+                new_pubs.append(new_pub)
+            else:
+                print('bleh', pub)
+        print(new_pubs)
+        return new_pubs
+
     def find(self, criteria):
         """
             DBLP uses as main search lastname firstname and publications.
             affiliation, venue and publication years can narrow down the search
         """
-        print(criteria)
         od = 1970 if criteria['years'][0] == '' else int(criteria['years'][0])
         do = (datetime.datetime.now().year if criteria['years'][0] == '' else
               int(criteria['years'][1]))
@@ -151,6 +184,7 @@ class DBLPAccess:
             authors = self._msearch_name(name, criteria['affiliation'])
             authors = self.refine_by_pubs(authors, criteria['keywords'],
                                           range(od, do + 1), criteria['venue'])
+        print(authors)
         if not authors:
             authors = self._msearch_pubs(criteria['keywords'],
                                          range(od, do + 1),
@@ -159,6 +193,7 @@ class DBLPAccess:
         result = []
         for author in authors:
             author = dict(author.data)
+            author['publications'] = self.refine_publication(author)
             if not isinstance(author['name'], str):
                 author['name'] = author['name'][0]
             author['uid'] = str(hash(author['name']))
@@ -180,28 +215,47 @@ orcid_map = {
     'keywords': 'work-titles'
 }
 class ORCiD:
-    orcid
-    def __init__(self):
-        pass
 
-        def process_author(author):
-            pass
+    def process_author(author):
+        print(author)
+        author = {
+            'name': author.given_name + " " + author.family_name,
+            # 'affiliation': '',
+            'biography': author.biography['value'],
+            'interests':  author.keywords,
+            'homepages': author.researcher_urls,
+            'publications': ORCiD.process_publications(author.publications)
+        }
+        return author
 
-        def process_publication(pub):
-            pass
+    def process_publications(pubs):
+        publications = []
+        for pub in pubs:
+            new_pub = {
+                'title': pub.title,
+                'link': pub.url,
+                'year': pub._original_dict['publication-date']['year']['value']
+            }
+            authors = pub._original_dict['work-contributors']['contributor']
+            authors = [x['credit-name']['value'] for x in authors]
+            new_pub['author'] = authors
+            if 'journal-title' in pub._original_dict:
+                new_pub['journal'] = new_pub._original_dict['journal-title']
+            publications.append(new_pub)
+        return publications
 
     def find(criteria):
         queries = []
         for keyword in criteria:
             if not criteria[keyword] or keyword not in orcid_map:
                 continue
-            print(orcid_map[keyword], criteria[keyword])
             queries.append(Q(orcid_map[keyword],
                              fuzzy=(criteria[keyword], 0.5)))
         query = queries.pop()
         while queries:
             query = query & queries.pop()
-        return [
+        authors = [ORCiD.process_author(x) for x in list(orcid.search(query))]
+        return authors
 
 
 

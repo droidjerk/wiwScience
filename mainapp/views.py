@@ -1,30 +1,16 @@
-import os
 import string
 import datetime
 
 from math import ceil
 
 import flask
-import redis
 
 from flask import abort, session
-from celery import Celery
-from werkzeug.contrib.cache import MemcachedCache
 
 from .forms import SearchForm
-from .data_retrieval import finder
-from mainapp import app
+from mainapp import app, celery, cache
 
-r = redis.from_url(os.environ.get("REDIS_URL"))
-app.config['CELERY_BROKER_URL'] = redis_url
-app.config['CELERY_RESULT_BACKEND'] = redis_url
-
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
-
-
-cache = MemcachedCache(['127.0.0.1:11211'])
-# cache = MemcachedCache(['memcached-12214.c3.eu-west-1-1.ec2.cloud.redislabs.com:12214'])
+# Setting up Redis, Celery and Memcached
 
 
 def url_for_other_page(page):
@@ -85,7 +71,6 @@ def search_form():
         datefield.data = years[-1][0]
 
     if flask.request.method == 'POST':
-        find = finder.DBLPAccess()
         arguments = {
             'firstname': flask.request.form['imie'],
             'lastname': flask.request.form['nazwisko'],
@@ -95,25 +80,16 @@ def search_form():
             'affiliation': flask.request.form['afilacja'],
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
-        results = find.find(arguments)
-        # key identifies a search query; it is held in a cookie and used
-        # in show_results to present entries for the given query
-        key = str(hash(frozenset(arguments.items())))
-        session['latest-search'] = key
-        # Each found author profile is held in cache for an hour;
-        # a uid identifies the author, and a list of author uids is bound to
-        # the query key
-        query_pointers = []
-        for author in results:
-            cache.add(author['uid'], author, timeout=60 * 60)
-            query_pointers.append(author['uid'])
-        cache.add(key, query_pointers, timeout=60 * 60)
+        print(arguments)
         return flask.redirect(flask.url_for('show_results'))
     return flask.render_template('search.html', form=form)
 
-@celery.task(bind=True)
-def fetch_records(self):
 
+@app.route('/longtask', methods=['POST'])
+def longtask():
+    task = long_task.apply_async()
+    return jsonify({}), 202, {'Location': url_for('taskstatus',
+                                                  task_id=task.id)}
 
 
 @app.route('/results/', defaults={'page': 1})
