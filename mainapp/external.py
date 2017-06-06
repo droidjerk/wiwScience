@@ -1,5 +1,5 @@
 import os
-import urlparse
+import urllib.parse
 import bmemcached
 import json
 
