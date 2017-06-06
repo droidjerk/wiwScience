@@ -20,6 +20,6 @@ cache = MemcachedCache(['memcached-12214.c3.eu-west-1-1.ec2.cloud.redislabs.com:
 Bootstrap(app)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
 from mainapp import models, views
