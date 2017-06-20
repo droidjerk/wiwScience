@@ -13,9 +13,17 @@ def flatten(x):
         return [x]
 
 
-def aggregate(arguments):
+def aggregate(arguments, engines):
+    engine_choice = [int(x) for x in engines]
     executor = ThreadPoolExecutor(max_workers=5)
     engines = [finder.DBLPAccess(), finder.ORCiD(), finder.ScholarlyAccess()]
+    use_engines = []
+    for i, engine in enumerate(engines):
+        if i + 1 in engine_choice:
+            use_engines.append(engine)
+    engines = use_engines
+            
+    print(engines)
     futures = [executor.submit(engine.find, arguments) for engine in engines]
 
     results = [future.result() for future in futures]

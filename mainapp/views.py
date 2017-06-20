@@ -89,7 +89,8 @@ def search_form():
             'affiliation': flask.request.form['afilacja'],
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
-        results = aggregate.aggregate(arguments)
+        engines = flask.request.form.getlist('engines')
+        results = aggregate.aggregate(arguments, engines)
         # key identifies a search query; it is held in a cookie and used
         # in show_results to present entries for the given query
         key = str(hash(frozenset(arguments.items())))
