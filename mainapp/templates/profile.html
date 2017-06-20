@@ -16,9 +16,9 @@
                     {% endfor %}
                 </table>
             </div>
-            {% if 'image' in profile %}
+            {% if 'image' in other %}
                <div class="col-md-4">
-                    <img src={{profile['image']}} class="img-responsive">
+                    <img src={{ other['image'][0] }} class="img-responsive">
                </div>
         </div>
             {% endif %}

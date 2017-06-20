@@ -3,17 +3,18 @@ import datetime
 from math import ceil
 
 import flask
+import json
 
 from flask import abort, session
 from werkzeug.contrib.cache import MemcachedCache
 import string
 from .forms import SearchForm
-from .data_retrieval import finder
 from mainapp import app
 
+from . import finder, aggregate
 from sqlitedict import SqliteDict
 
-cache = SqliteDict('cache')
+cache = SqliteDict('cache', autocommit=True)
 
 
 def url_for_other_page(page):
@@ -61,6 +62,12 @@ class Pagination(object):
                 last = num
 
 
+def uid(author):
+    name = "".join(author['name'])
+    affiliation = "".join(author['affiliation'])
+    return hash(name + affiliation)
+
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/search', methods=['GET', 'POST'])
 def search_form():
@@ -72,9 +79,7 @@ def search_form():
     for datefield in [form.do, form.od]:
         datefield.choices = years
         datefield.data = years[-1][0]
-
     if flask.request.method == 'POST':
-        find = finder.DBLPAccess()
         arguments = {
             'firstname': flask.request.form['imie'],
             'lastname': flask.request.form['nazwisko'],
@@ -84,7 +89,7 @@ def search_form():
             'affiliation': flask.request.form['afilacja'],
             'years': (flask.request.form['od'], flask.request.form['do'])
         }
-        results = find.find(arguments)
+        results = aggregate.aggregate(arguments)
         # key identifies a search query; it is held in a cookie and used
         # in show_results to present entries for the given query
         key = str(hash(frozenset(arguments.items())))
@@ -94,9 +99,9 @@ def search_form():
         # the query key
         query_pointers = []
         for author in results:
-            cache[author['uid']] = author
-            query_pointers.append(author['uid'])
-        cache[key] = query_pointers
+            cache[uid(author)] = json.dumps(author)
+            query_pointers.append(uid(author))
+        cache[key] = json.dumps(query_pointers)
         return flask.redirect(flask.url_for('show_results'))
     return flask.render_template('search.html', form=form)
 
@@ -112,7 +117,7 @@ def show_results(page):
         flask.flash("Your search query has expired!")
         return flask.redirect('/')
     key = session['latest-search']
-    entries = [cache.get(x) for x in cache.get(key)]
+    entries = [json.loads(cache.get(x)) for x in json.loads(cache.get(key)) if cache.get(x) is not None]
     content = []
     for author in entries:
         # TODO
@@ -120,15 +125,19 @@ def show_results(page):
         # retrived an error should show. Currently it's failing silently.
         if author is None:
             continue
-        name, surname = author['name'].split(" ")[0], author['name'].split(" ")[1]
-        content.append([flask.url_for('static', filename='default.png'),
-                        name, surname,
+        name = author['name']
+        if 'image' in author:
+            image = author['image'][0]
+        else:
+            image = flask.url_for('static', filename='default.png')
+        content.append([image,
+                        name,
                         author['affiliation'],
-                        author['uid']])
+                        uid(author)])
+        print(content)
     if not content and page != 1:
         abort(404)
-    # Pagination is 3 for testing.
-    pagination = Pagination(page, 3, len(content))
+    pagination = Pagination(page, 10, len(content))
     return flask.render_template('results.html',
                                  pagination=pagination,
                                  content=content)
@@ -159,36 +168,47 @@ def process_profile(profile, pubs):
     submap = {
         'name': "Name",
         'affiliation': "Institution",
+        'biography': "Biography",
         'homepages': "Homepage"
     }
+    other = {}
     nprofile = {}
     for keyword in profile:
-        if keyword not in submap:
-            continue
+        if keyword == 'image':
+            other[keyword] = profile[keyword]
         if keyword == 'name':
             profile[keyword] = process_author(profile['name'])
         if keyword == 'homepages':
             profile[keyword] = process_homepages(profile[keyword])
+        if keyword == 'affiliation' or keyword == 'biography':
+            markup = '<ul class="list-group borderless">'
+            for aff in profile[keyword]:
+                if aff == "" or len(aff) < 2:
+                    continue
+                markup += '<li class="list-group-item borderless">' + aff + "</li>"
+            markup += '</ul>'
+            profile[keyword] = flask.Markup(markup)
+        if keyword not in submap:
+            continue
         nprofile[submap[keyword]] = profile[keyword]
     npubs = []
     for pub in pubs:
-        key = list(pub.keys())[0]
-        pub = pub[key]
-        npubs.append([process_author(pub.get('author') or pub['editor']),
-                      pub['title'], pub['year']])
-    return nprofile, npubs
+        authors = flask.Markup("<br>".join(pub.get('author')))
+        npubs.append([authors, pub['title'][0], pub['year'][0], pub.get('other', '')[0]])
+    return nprofile, npubs, other
 
 
 @app.route('/profile/<id>')
 def profile(id):
-    content = cache.get(id)
+    content = json.loads(cache.get(id))
     if content is None:
         flask.flash("Profile is not cached on server")
         return flask.redirect('/')
     profile = content
     publications = profile['publications']
 
-    profile, publications = process_profile(profile, publications)
+    profile, publications, other = process_profile(profile, publications)
+    print(other)
 
     return flask.render_template('profile.html', profile=profile,
-                                 pubs=publications)
+                                 pubs=publications, other=other)

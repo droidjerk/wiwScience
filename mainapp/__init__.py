@@ -13,4 +13,4 @@ if __name__ == '__main__':
     app.run()
 
 
-from mainapp import views, models
+from mainapp import views

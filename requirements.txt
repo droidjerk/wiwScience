@@ -33,3 +33,5 @@ sqlitedict==1.5.0
 visitor==0.1.3
 Werkzeug==0.12.1
 WTForms==2.1
+-e git://github.com/kosiba-mat/dblp-python.git#egg=dblp-python
+-e git://github.com/kosiba-mat/orcid-python.git#egg=orcid-python 

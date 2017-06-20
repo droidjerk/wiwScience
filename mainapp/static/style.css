@@ -10,3 +10,7 @@ img {
     padding-bottom: 10px;
     padding-left: 20px;
 }
+
+li.borderless {
+  border-top: 0 none;
+}

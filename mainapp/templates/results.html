@@ -10,8 +10,14 @@
                 <tr> 
                     <td><img src={{ content[index][0] }} width="100"></td>
                     {% for cell_index in range(1, content[index]|length - 1) %}
-                        <td>{{ content[index][cell_index] }}</td>
+                        <td>
+                        <ul class="list-group">
+                        {% for element in content[index][cell_index] %}
+                            <li class="list-group-item">{{element}}</li>    
+                        {% endfor %}
+                        </ul>
                     {% endfor %}
+                    </td>
                     <td><a href="{{ url_for('profile', id=content[index][-1]) }}">Profil</a>
                 </tr>
             {% endif %}
