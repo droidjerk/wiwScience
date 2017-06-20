@@ -14,3 +14,7 @@ img {
 li.borderless {
   border-top: 0 none;
 }
+
+.carousel-inner > .item > img {
+    margin: 0 auto;
+}
