@@ -6,7 +6,7 @@ bibtexparser==0.6.2
 cffi==1.10.0
 click==6.7
 cryptography==1.8.1
--e git://github.com/kosiba-mat/dblp-python.git@7bce9fa53d625f4c6030a5db218296fce50369ef#egg=dblp_python
+-e git://github.com/kosiba-mat/dblp-python.git#egg=dblp_python
 dominate==2.3.1
 Flask==0.12.1
 Flask-Admin==1.5.0
@@ -21,7 +21,7 @@ Jinja2==2.9.6
 lucene-querybuilder==0.2
 lxml==3.7.3
 MarkupSafe==1.0
--e git://github.com/kosiba-mat/orcid-python.git@6db65e585fd1cf070a32794de401500b489b1b85#egg=orcid_python
+-e git://github.com/kosiba-mat/orcid-python.git#egg=orcid_python
 packaging==16.8
 pycparser==2.17
 pyOpenSSL==17.0.0
