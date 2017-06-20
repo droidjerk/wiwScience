@@ -22,7 +22,6 @@ def aggregate(arguments, engines):
         if i + 1 in engine_choice:
             use_engines.append(engine)
     engines = use_engines
-            
     print(engines)
     futures = [executor.submit(engine.find, arguments) for engine in engines]
 

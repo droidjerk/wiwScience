@@ -170,7 +170,8 @@ def process_profile(profile, pubs):
         'name': "Name",
         'affiliation': "Institution",
         'biography': "Biography",
-        'homepages': "Homepage"
+        'homepages': "Homepage", 
+        'interests': "Research areas"
     }
     other = {}
     nprofile = {}
@@ -181,7 +182,7 @@ def process_profile(profile, pubs):
             profile[keyword] = process_author(profile['name'])
         if keyword == 'homepages':
             profile[keyword] = process_homepages(profile[keyword])
-        if keyword == 'affiliation' or keyword == 'biography':
+        if keyword == 'affiliation' or keyword == 'biography' or keyword == 'interests':
             markup = '<ul class="list-group borderless">'
             for aff in profile[keyword]:
                 if aff == "" or len(aff) < 2:
